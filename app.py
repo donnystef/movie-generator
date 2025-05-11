@@ -122,4 +122,4 @@ def reset():
 if __name__ == "__main__":
     app.run(debug=False, host='0.0.0.0', port=10000)
 
-print("OpenAI API Key:", openai.api_key)
+print("DEBUG: OpenAI API key is set?", bool(openai.api_key))
