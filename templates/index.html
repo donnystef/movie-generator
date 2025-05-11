@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/styles.css">
+    <title>Movie Recommendation System</title>
+    <style>
+        body {
+            background-color: black; /* Keep the dark theme */
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            margin-top: 20px;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"], textarea {
+            padding: 10px;
+            width: 300px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #e50914;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #f40612;
+        }
+
+        .slider {
+            position: relative;
+            max-width: 800px;
+            margin: 20px auto;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(255, 255, 255, 0.1);
+        }
+
+        .slider-container {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .slide {
+            min-width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        .slide img {
+            max-width: 100%;
+            border-radius: 10px;
+            transition: transform 0.3s ease;
+        }
+
+        .slide img:hover {
+            transform: scale(1.05);
+        }
+
+        .arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 30px;
+            color: white;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .arrow.left { left: 10px; }
+        .arrow.right { right: 10px; }
+
+        .arrow:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* Slider Dots */
+        .slider-dots {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .dot {
+            height: 10px;
+            width: 10px;
+            margin: 0 5px;
+            background-color: #bbb;
+            border-radius: 50%;
+            display: inline-block;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+
+        .dot.active {
+            background-color: #e50914;
+        }
+
+        .movie-title {
+            margin-top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .movie-description {
+            font-size: 16px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero-background">
+        <div class="overlay"></div>
+        <div class="container">
+            <h1>Movie Recommendation System</h1>
+
+            <div class="form-card">
+                <form id="movie-form" method="POST">
+                    <textarea name="description" rows="4" placeholder="What kind of movie are you in the mood for? Action, drama, comedy...">{{ request.form['description'] if request.method == 'POST' else '' }}</textarea>
+                    
+                    <div class="button-container">
+                        <button type="submit" class="search-btn">🎥 Get Recommendations</button>
+                        <button type="button" class="reset-btn" onclick="location.href='/'">Reset</button>
+                    </div>
+
+                    <div class="filters">
+                        <h3>Customize Your Recommendation:</h3>
+                    
+                        <label><input type="checkbox" name="filters" value="Family Friendly"> Family Friendly</label>
+                        <label><input type="checkbox" name="filters" value="That launched 5 Years ago"> Recently Movie</label>
+                        <label><input type="checkbox" name="filters" value="Action-packed"> Action-packed</label>
+                        <label><input type="checkbox" name="filters" value="Romance"> Romance</label>
+                        <label><input type="checkbox" name="filters" value="Sci-Fi"> Sci-Fi</label>
+                        <label><input type="checkbox" name="filters" value="Highly Rated (TMDb Rating 8+)"> Highly Rated (TMDb Rating 8+)</label>
+                    </div>
+                    
+                </form>
+            </div>
+
+            {% if movies %}
+            <div class="slider">
+                <div class="slider-container">
+                    {% for movie in movies %}
+                    <div class="slide">
+                        {% if movie.poster %}
+                        <img src="{{ movie.poster }}" alt="{{ movie.title }}">
+                        {% endif %}
+                        <h3 class="movie-title">{{ movie.title }} (Rating: {{ movie.rating }})</h3>
+                        <p class="movie-description">{{ movie.description }}</p>
+
+                        {% if movie.watch_link %}
+                        <a href="{{ movie.watch_link }}" target="_blank">
+                            <button class="watch-now-btn">🎬 Watch Trailer</button>
+                        </a>
+                        {% endif %}
+
+                        {% if movie.layarkaca_link %}
+                        <a href="{{ movie.layarkaca_link }}" target="_blank">
+                            <button class="layarkaca-btn">Watch on Official Platform</button>
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="arrow left" onclick="prevSlide()">&#10094;</div>
+                <div class="arrow right" onclick="nextSlide()">&#10095;</div>
+                <div class="slider-dots"></div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+        
+
+    <script>
+        let currentSlide = 0;
+        let slideInterval;
+        const slides = document.querySelectorAll('.slide');
+        const sliderContainer = document.querySelector('.slider-container');
+        const dotsContainer = document.querySelector('.slider-dots');
+
+        // Create dots dynamically based on number of slides
+        slides.forEach((_, index) => {
+            let dot = document.createElement("span");
+            dot.classList.add("dot");
+            dot.addEventListener("click", () => showSlide(index));
+            dotsContainer.appendChild(dot);
+        });
+
+        const dots = document.querySelectorAll('.dot');
+
+        function showSlide(index) {
+            currentSlide = (index + slides.length) % slides.length;
+
+            // Move slider
+            const offset = -currentSlide * 100;
+            sliderContainer.style.transform = `translateX(${offset}%)`;
+
+            // Update fade effect
+            slides.forEach((slide, i) => {
+                slide.style.opacity = i === currentSlide ? "1" : "0";
+            });
+
+            // Update active dot
+            dots.forEach((dot, i) => {
+                dot.classList.toggle("active", i === currentSlide);
+            });
+        }
+
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+
+        // Autoplay function
+        function startAutoplay() {
+            slideInterval = setInterval(() => {
+                nextSlide();
+            }, 4000); // Change slides every 4 seconds
+        }
+
+        // Stop autoplay when user interacts
+        function stopAutoplay() {
+            clearInterval(slideInterval);
+        }
+
+        sliderContainer.addEventListener("mouseenter", stopAutoplay);
+        sliderContainer.addEventListener("mouseleave", startAutoplay);
+
+        // Allow keyboard navigation
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "ArrowLeft") prevSlide();
+            if (event.key === "ArrowRight") nextSlide();
+        });
+
+        // Allow swipe on mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        sliderContainer.addEventListener("touchstart", (event) => {
+            touchStartX = event.changedTouches[0].screenX;
+        });
+
+        sliderContainer.addEventListener("touchend", (event) => {
+            touchEndX = event.changedTouches[0].screenX;
+            if (touchStartX - touchEndX > 50) nextSlide();
+            if (touchEndX - touchStartX > 50) prevSlide();
+        });
+
+        // Initialize first slide
+        showSlide(currentSlide);
+        startAutoplay();
+    </script>
+</body>
+</html>
