@@ -6,11 +6,11 @@ from flask import Flask, render_template, request, redirect, session
 
 app = Flask(__name__)
 
-TMDB_API_KEY = 'c8bf776db347aae47be1fb1fb57a5fe9'
+#TMDB_API_KEY = 'c8bf776db347aae47be1fb1fb57a5fe9'
 #OPENAI_API_KEY = 'sk-ABt0WlS6CODODSvvIucfI6RBK2xy8R0zu3tQuSgzFWT3BlbkFJBfein0lNcwSrXb33FMC3rA3KypTBCTHrf5OYF2Y_kA'
-openai.api_key = OPENAI_API_KEY
+#openai.api_key = OPENAI_API_KEY
 
-#TMDB_API_KEY = os.environ.get('TMDB_API_KEY', '').strip()
+TMDB_API_KEY = os.environ.get('TMDB_API_KEY', '').strip()
 openai.api_key = os.environ.get('OPENAI_API_KEY', '').strip()
 
 def reset_conversation():
