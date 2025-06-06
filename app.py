@@ -26,7 +26,7 @@ def format_movie_title_for_url(title):
 def generate_movie_titles_and_streaming(user_description):
     """Generate movie titles and predict where they can be streamed."""
     prompt = f"""
-    Based on the description: '{user_description}', recommend 10 distinct movies.
+    Based on the description: '{user_description}', recommend 5 distinct movies.
     Also, predict where each movie is available for streaming (Netflix, Disney+, Prime Video, Hulu, or HBO Max).
     Provide the response in JSON format like this:
     [
